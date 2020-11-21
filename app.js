@@ -11,6 +11,7 @@ const app = express();
 dotenv.config();
 
 // Connect to DB
+
 const options = {
   useCreateIndex: true,
   useNewUrlParser: true,
@@ -30,6 +31,7 @@ mongoose.connection.on('disconnected', function () {
   console.log('Database disconnected'); 
 });
 
+
 // Safe exit on Node process crash
 process.on('SIGINT', function() {   
   mongoose.connection.close(function () { 
@@ -38,16 +40,40 @@ process.on('SIGINT', function() {
   }); 
 }); 
 
+//Configure Res headers
+app.use((req,res, next) => {
+  res.header("Access-Control-Allow-Origin","*");
+  res.header("Access-Control-Allow-Headers","*"); 
+
+  if(req.method === 'OPTIONS'){
+      res.header("Access-Control-Allow-Methods","PUT,POST,PATCH,GET,DELETE");
+      return res.status(200).json({});
+  }
+next();
+})
+
+
 // Fills DB
 require("./models/populate");
 
 //Middleware
+
 app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
 app.use(morgan("dev"));
+
 //Route Middlewares
 app.use("/api/user", router);
+const courseRoute = require('./routes/api/course');
+const studentRoute = require('./routes/api/student');
+const professorRoute = require('./routes/api/professor');
+const chatRoute = require('./routes/api/chat');
+app.use('/course',courseRoute);
+app.use('/student',studentRoute);
+app.use('/professor',professorRoute);
+app.use('/chat',chatRoute);
+
 
 // Temporary error handler
 app.use(function (err, req, res, next) {
